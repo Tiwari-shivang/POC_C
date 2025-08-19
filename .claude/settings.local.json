@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(cmake:*)",
+      "Bash(rmdir:*)",
+      "Bash(rm:*)",
+      "Bash(.car_poc.exe --help)",
+      "Bash(./car_poc.exe --help)",
+      "Bash(./car_poc.exe --scenario \"../../cfg/scenario_default.csv\")",
+      "Bash(./car_poc.exe --scenario \"../../sim/scenarios/rain_parking.csv\")",
+      "Bash(./car_poc.exe --scenario \"../../sim/scenarios/highway_100kph.csv\")",
+      "Bash(./car_poc.exe)"
     ],
     "deny": [],
     "ask": []

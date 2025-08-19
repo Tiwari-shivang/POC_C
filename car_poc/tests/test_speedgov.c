@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "app_speedgov.h"
+#include <stdbool.h>
 
 static uint16_t mock_speed_kph = 50U;
 static uint32_t mock_timestamp_ms = 50U;

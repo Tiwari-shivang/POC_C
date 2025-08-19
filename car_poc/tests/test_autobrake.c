@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "app_autobrake.h"
+#include <stdbool.h>
 
 static uint16_t mock_distance_mm = 2000U;
 static uint32_t mock_timestamp_ms = 0U;

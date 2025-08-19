@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "app_climate.h"
+#include <stdbool.h>
 
 static int16_t mock_cabin_temp = 200;
 static int16_t mock_ambient_temp = 250;

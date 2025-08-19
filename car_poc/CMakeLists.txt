@@ -6,10 +6,15 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(HEADLESS "Build without SDL2 (CSV replayer)" ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -O0 -g3 -Wall -Wextra -Werror")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion -Wsign-conversion -Wformat=2 -Wundef")
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -O0 -g3 -Wall -Wextra -Werror")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion -Wsign-conversion -Wformat=2 -Wundef")
+endif()
 
-include_directories(inc cfg)
+include_directories(inc cfg sim)
 
 set(COMMON_SOURCES
     src/app_autobrake.c
@@ -31,16 +36,29 @@ if(HEADLESS)
     )
     add_definitions(-DHEADLESS_BUILD=1)
 else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(SDL2 REQUIRED sdl2)
-    
-    set(PLATFORM_SOURCES
-        src/main.c
-        src/platform_sdl.c
-        src/hal_sdl.c
-        ${COMMON_SOURCES}
-    )
-    add_definitions(-DHEADLESS_BUILD=0)
+    if(WIN32)
+        # For Windows demo, create a text-based interactive mode
+        set(PLATFORM_SOURCES
+            src/main.c
+            src/platform_pc.c
+            src/hal_interactive.c
+            ${COMMON_SOURCES}
+        )
+        add_definitions(-DHEADLESS_BUILD=0)
+        add_definitions(-DTEXT_UI_MODE=1)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(SDL2 REQUIRED sdl2)
+        
+        set(PLATFORM_SOURCES
+            src/main.c
+            src/platform_sdl.c
+            src/hal_sdl.c
+            ${COMMON_SOURCES}
+        )
+        add_definitions(-DHEADLESS_BUILD=0)
+        add_definitions(-DTEXT_UI_MODE=0)
+    endif()
 endif()
 
 add_executable(car_poc ${PLATFORM_SOURCES})
@@ -66,8 +84,10 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     if(NOT ${TEST_SOURCE} MATCHES "unity.c")
         get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
         add_executable(${TEST_NAME} ${TEST_SOURCE} tests/unity/unity.c)
-        target_include_directories(${TEST_NAME} PRIVATE tests/unity inc cfg)
-        target_link_libraries(${TEST_NAME} m)
+        target_include_directories(${TEST_NAME} PRIVATE tests/unity inc cfg sim)
+        if(NOT MSVC)
+            target_link_libraries(${TEST_NAME} m)
+        endif()
         add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     endif()
 endforeach()

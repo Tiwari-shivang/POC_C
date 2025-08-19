@@ -68,6 +68,8 @@ int main(int argc, char* argv[]) {
     uint32_t last_tick_time = 0U;
     uint32_t current_time = 0U;
     uint32_t elapsed_time = 0U;
+    uint32_t start_time = 0U;
+    uint32_t max_sim_time_ms = 5000U; // 5 second simulation
     
     parse_arguments(argc, argv);
     
@@ -84,8 +86,9 @@ int main(int argc, char* argv[]) {
     init_all_modules();
     
     last_tick_time = hal_now_ms();
+    start_time = last_tick_time;
     
-    while (running) {
+    while (running && ((hal_now_ms() - start_time) < max_sim_time_ms)) {
         current_time = hal_now_ms();
         elapsed_time = current_time - last_tick_time;
         
@@ -113,6 +116,40 @@ int main(int argc, char* argv[]) {
     
     parse_arguments(argc, argv);
     
+#ifdef TEXT_UI_MODE
+    printf("Starting Car PoC (Interactive Text Dashboard)\n");
+    
+    extern bool hal_interactive_init(void);
+    extern void hal_interactive_step(void);
+    extern void hal_interactive_cleanup(void);
+    
+    if (!hal_interactive_init()) {
+        fprintf(stderr, "Failed to initialize interactive HAL\n");
+        return 1;
+    }
+    
+    platform_init();
+    init_all_modules();
+    
+    last_tick_time = hal_now_ms();
+    
+    while (running) {
+        hal_interactive_step();
+        
+        current_time = hal_now_ms();
+        elapsed_time = current_time - last_tick_time;
+        
+        if (elapsed_time >= TICK_MS) {
+            tick_10ms();
+            last_tick_time = current_time;
+        }
+        
+        platform_sleep_ms(5U);
+    }
+    
+    hal_interactive_cleanup();
+    
+#else
     printf("Starting Car PoC (SDL2 Interactive mode)\n");
     
     if (!platform_sdl_init()) {
@@ -146,6 +183,7 @@ int main(int argc, char* argv[]) {
     
     hal_sdl_cleanup();
     platform_sdl_quit();
+#endif
     
     printf("Car PoC simulation completed\n");
     return 0;

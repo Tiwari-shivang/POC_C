@@ -1,5 +1,7 @@
 #include "unity.h"
 #include "app_autopark.h"
+#include "hal.h"
+#include <stdbool.h>
 
 static bool mock_gap_found = false;
 static uint16_t mock_gap_width = 0U;

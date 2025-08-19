@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "app_wipers.h"
+#include <stdbool.h>
 
 static uint8_t mock_rain_pct = 0U;
 static uint32_t mock_timestamp_ms = 0U;
