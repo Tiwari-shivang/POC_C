@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     
     parse_arguments(argc, argv);
     
-#ifdef TEXT_UI_MODE
+#if TEXT_UI_MODE
     printf("Starting Car PoC (Interactive Text Dashboard)\n");
     
     extern bool hal_interactive_init(void);
