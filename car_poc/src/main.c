@@ -7,6 +7,7 @@
 #include "app_climate.h"
 #include "app_voice.h"
 #include "scenario.h"
+#include "io_logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +46,7 @@ static void tick_10ms(void) {
     app_voice_step();
 }
 
-static void parse_arguments(int argc, char* argv[]) {
+static void parse_arguments(int argc, const char* const argv[]) {
     int i = 0;
     
     for (i = 1; i < argc; i++) {
@@ -64,10 +65,8 @@ static void parse_arguments(int argc, char* argv[]) {
 }
 
 #if HEADLESS_BUILD
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
     uint32_t last_tick_time = 0U;
-    uint32_t current_time = 0U;
-    uint32_t elapsed_time = 0U;
     uint32_t start_time = 0U;
     uint32_t max_sim_time_ms = 5000U; // 5 second simulation
     
@@ -83,14 +82,15 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
+    io_logger_init("simulation_log.csv");
     init_all_modules();
     
     last_tick_time = hal_now_ms();
     start_time = last_tick_time;
     
-    while (running && ((hal_now_ms() - start_time) < max_sim_time_ms)) {
-        current_time = hal_now_ms();
-        elapsed_time = current_time - last_tick_time;
+    while ((hal_now_ms() - start_time) < max_sim_time_ms) {
+        uint32_t current_time = hal_now_ms();
+        uint32_t elapsed_time = current_time - last_tick_time;
         
         if (elapsed_time >= TICK_MS) {
             tick_10ms();
@@ -101,6 +101,7 @@ int main(int argc, char* argv[]) {
     }
     
     scenario_close();
+    io_logger_close();
     hal_mock_cleanup();
     
     printf("Car PoC simulation completed\n");
@@ -109,10 +110,8 @@ int main(int argc, char* argv[]) {
 
 #else
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
     uint32_t last_tick_time = 0U;
-    uint32_t current_time = 0U;
-    uint32_t elapsed_time = 0U;
     
     parse_arguments(argc, argv);
     
@@ -136,8 +135,8 @@ int main(int argc, char* argv[]) {
     while (running) {
         hal_interactive_step();
         
-        current_time = hal_now_ms();
-        elapsed_time = current_time - last_tick_time;
+        uint32_t current_time = hal_now_ms();
+        uint32_t elapsed_time = current_time - last_tick_time;
         
         if (elapsed_time >= TICK_MS) {
             tick_10ms();
@@ -170,8 +169,8 @@ int main(int argc, char* argv[]) {
     while (running) {
         hal_sdl_step();
         
-        current_time = hal_now_ms();
-        elapsed_time = current_time - last_tick_time;
+        uint32_t current_time = hal_now_ms();
+        uint32_t elapsed_time = current_time - last_tick_time;
         
         if (elapsed_time >= TICK_MS) {
             tick_10ms();

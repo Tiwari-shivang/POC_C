@@ -501,8 +501,8 @@ static void draw_user_car(void){
     /* Windshield (front window) */
     SDL_Color windshield = {120, 150, 200, 200};
     SDL_SetRenderDrawColor(renderer, windshield.r, windshield.g, windshield.b, 255);
-    SDL_Rect window = {car_x + car_w - 25, car_y + 5, 20, car_h - 10};
-    SDL_RenderFillRect(renderer, &window);
+    SDL_Rect car_window = {car_x + car_w - 25, car_y + 5, 20, car_h - 10};
+    SDL_RenderFillRect(renderer, &car_window);
     
     /* Front bumper (pointing right to show forward motion) */
     SDL_SetRenderDrawColor(renderer, car_body.r - 20, car_body.g - 20, car_body.b - 20, 255);
@@ -532,9 +532,9 @@ static void draw_user_car(void){
         
         for(int i = 0; i < motion_lines; i++){
             int line_x = car_x - 15 - (i * 8);
-            int line_y1 = car_y + 8 + (i * 2);
-            int line_y2 = car_y + car_h - 8 - (i * 2);
             if (line_x > ws_x + 5) {
+                int line_y1 = car_y + 8 + (i * 2);
+                int line_y2 = car_y + car_h - 8 - (i * 2);
                 SDL_RenderDrawLine(renderer, line_x, line_y1, line_x - 6, line_y1);
                 SDL_RenderDrawLine(renderer, line_x, line_y2, line_x - 6, line_y2);
             }

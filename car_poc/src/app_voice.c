@@ -63,7 +63,6 @@ static bool find_intent_match(const char* command, char* response, uint16_t resp
 
 static void process_voice_command(const char* command) {
     char response[VOICE_BUFFER_SIZE];
-    bool intent_found = false;
     
     if (command == NULL) {
         return;
@@ -78,7 +77,10 @@ static void process_voice_command(const char* command) {
         return;
     }
     
-    intent_found = find_intent_match(command + strlen(WAKE_PHRASE), response, VOICE_BUFFER_SIZE);
+    if (!find_intent_match(command + strlen(WAKE_PHRASE), response, VOICE_BUFFER_SIZE)) {
+        strncpy(response, "Intent not recognized", VOICE_BUFFER_SIZE - 1U);
+        response[VOICE_BUFFER_SIZE - 1U] = '\0';
+    }
     
     strncpy(state.last_response, response, VOICE_BUFFER_SIZE - 1U);
     state.last_response[VOICE_BUFFER_SIZE - 1U] = '\0';

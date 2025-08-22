@@ -22,6 +22,9 @@ void app_autobrake_step(void) {
     bool sensor_valid = false;
     bool should_brake = false;
     
+    /* MISRA Rule 16.5: Ensure critical state consistency */
+    platform_assert(state.hit_count <= HIT_COUNT_THRESH);
+    
     if (!hal_get_vehicle_ready()) {
         state.hit_count = 0U;
         state.brake_active = false;
