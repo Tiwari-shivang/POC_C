@@ -11,7 +11,15 @@
       "Bash(./car_poc.exe --scenario \"../../cfg/scenario_default.csv\")",
       "Bash(./car_poc.exe --scenario \"../../sim/scenarios/rain_parking.csv\")",
       "Bash(./car_poc.exe --scenario \"../../sim/scenarios/highway_100kph.csv\")",
-      "Bash(./car_poc.exe)"
+      "Bash(./car_poc.exe)",
+      "Bash(if exist build rmdir /s /q build)",
+      "Bash(car_poc.exe)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(where cppcheck)",
+      "Bash(powershell:*)",
+      "Bash(where ninja)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

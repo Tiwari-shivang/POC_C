@@ -1,0 +1,71 @@
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\app_autobrake.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\app_climate.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\app_speedgov.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\app_voice.c:81:18: style: Variable 'intent_found' is assigned a value that is never used. [unreadVariable]
+    intent_found = find_intent_match(command + strlen(WAKE_PHRASE), response, VOICE_BUFFER_SIZE);
+                 ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\app_wipers.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:0:0: information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches. [normalCheckLevelMaxBranches]
+
+^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:535:17: style: The scope of the variable 'line_y1' can be reduced. [variableScope]
+            int line_y1 = car_y + 8 + (i * 2);
+                ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:536:17: style: The scope of the variable 'line_y2' can be reduced. [variableScope]
+            int line_y2 = car_y + car_h - 8 - (i * 2);
+                ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:504:14: style: Local variable 'window' shadows outer variable [shadowVariable]
+    SDL_Rect window = {car_x + car_w - 25, car_y + 5, 20, car_h - 10};
+             ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:17:22: note: Shadowed declaration
+static SDL_Window*   window   = NULL;
+                     ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\hal_sdl.c:504:14: note: Shadow variable
+    SDL_Rect window = {car_x + car_w - 25, car_y + 5, 20, car_h - 10};
+             ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:48:45: style: Parameter 'argv' can be declared as const array [constParameter]
+static void parse_arguments(int argc, char* argv[]) {
+                                            ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:114:27: style: Variable 'current_time' is assigned a value that is never used. [unreadVariable]
+    uint32_t current_time = 0U;
+                          ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:115:27: style: Variable 'elapsed_time' is assigned a value that is never used. [unreadVariable]
+    uint32_t elapsed_time = 0U;
+                          ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:91:12: style: Condition 'running' is always true [knownConditionTrueFalse]
+    while (running && ((hal_now_ms() - start_time) < max_sim_time_ms)) {
+           ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:69:14: style: The scope of the variable 'current_time' can be reduced. [variableScope]
+    uint32_t current_time = 0U;
+             ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:70:14: style: The scope of the variable 'elapsed_time' can be reduced. [variableScope]
+    uint32_t elapsed_time = 0U;
+             ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:69:27: style: Variable 'current_time' is assigned a value that is never used. [unreadVariable]
+    uint32_t current_time = 0U;
+                          ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\main.c:70:27: style: Variable 'elapsed_time' is assigned a value that is never used. [unreadVariable]
+    uint32_t elapsed_time = 0U;
+                          ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\io_logger.c:7:6: style: The function 'io_logger_init' is never used. [unusedFunction]
+bool io_logger_init(const char* filename) {
+     ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\io_logger.c:24:6: style: The function 'io_logger_log_outputs' is never used. [unusedFunction]
+void io_logger_log_outputs(uint32_t timestamp_ms, bool brake, uint8_t wiper_mode,
+     ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\io_logger.c:45:6: style: The function 'io_logger_close' is never used. [unusedFunction]
+void io_logger_close(void) {
+     ^
+C:\Users\shivang.tiwari\Mercedes_POC\car_poc\src\platform_pc.c:15:6: style: The function 'platform_assert' is never used. [unusedFunction]
+void platform_assert(bool cond) {
+     ^
+nofile:0:0: information: Active checkers: 110/966 (use --checkers-report=<filename> to see details) [checkersReport]
+

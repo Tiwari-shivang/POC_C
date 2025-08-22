@@ -113,6 +113,22 @@ static void handle_keyboard_input(void){
     /* Speed limit controls */
     if (ks[SDL_SCANCODE_Q] && sim_speed_limit < 200U) sim_speed_limit += 5U; /* increase limit */
     if (ks[SDL_SCANCODE_P] && sim_speed_limit > 30U)  sim_speed_limit -= 5U; /* decrease limit */
+
+    /* Manual object spawn with R key */
+    static bool r_pressed = false;
+    if (ks[SDL_SCANCODE_R] && !r_pressed) {
+        if (obj_state == 0U) { /* only spawn if no object active */
+            obj_state = 1U;
+            sim_distance_mm = 4000U + (uint16_t)((now_ms() % 2000u));
+            /* spawn pedestrian at bottom RIGHT of windshield */
+            ped_active = true;
+            ped_x_px = (float)(ws_x + ws_w - 30); /* right edge */
+            ped_dir = -1; /* moving left */
+        }
+        r_pressed = true;
+    } else if (!ks[SDL_SCANCODE_R]) {
+        r_pressed = false;
+    }
 }
 
 /* ===========================================================
@@ -235,9 +251,9 @@ static void draw_pedestrian(void){
     int H = 40 + (int)(t * 80.0f);
     int W = (int)(H * 0.45f);
     int x = (int)ped_x_px;
-    int y = ws_y + ws_h - H - 4;
+    int y = ws_y + ws_h - H - 4; /* bottom of windshield for ground level */
 
-    SDL_Color body = (SDL_Color){ 30, 30, 34, 255 };
+    SDL_Color body = (SDL_Color){ 245, 245, 250, 255 }; /* white pedestrian */
     SDL_SetRenderDrawColor(renderer, body.r, body.g, body.b, 255);
 
     /* head */
@@ -461,6 +477,79 @@ static void draw_wipers_and_wiped_area(void){
 }
 
 /* ===========================================================
+ *  USER CAR (bottom left of windshield)
+ * =========================================================== */
+static void draw_user_car(void){
+    if (ws_w == 0 || ws_h == 0) return; /* windshield not initialized */
+    
+    /* Position: bottom-left of windshield with slight offset */
+    int car_x = ws_x + 30;
+    int car_y = ws_y + ws_h - 60;
+    int car_w = 80;  /* car width */
+    int car_h = 35;  /* car height */
+    
+    /* Car body (main rectangle) - silver/gray color */
+    SDL_Color car_body = {180, 180, 185, 255};
+    SDL_SetRenderDrawColor(renderer, car_body.r, car_body.g, car_body.b, 255);
+    SDL_Rect body = {car_x, car_y, car_w, car_h};
+    SDL_RenderFillRect(renderer, &body);
+    
+    /* Car outline */
+    SDL_SetRenderDrawColor(renderer, 100, 100, 110, 255);
+    SDL_RenderDrawRect(renderer, &body);
+    
+    /* Windshield (front window) */
+    SDL_Color windshield = {120, 150, 200, 200};
+    SDL_SetRenderDrawColor(renderer, windshield.r, windshield.g, windshield.b, 255);
+    SDL_Rect window = {car_x + car_w - 25, car_y + 5, 20, car_h - 10};
+    SDL_RenderFillRect(renderer, &window);
+    
+    /* Front bumper (pointing right to show forward motion) */
+    SDL_SetRenderDrawColor(renderer, car_body.r - 20, car_body.g - 20, car_body.b - 20, 255);
+    SDL_Rect bumper = {car_x + car_w, car_y + 8, 8, car_h - 16};
+    SDL_RenderFillRect(renderer, &bumper);
+    
+    /* Wheels (4 circles) */
+    SDL_Color wheel = {50, 50, 60, 255};
+    SDL_SetRenderDrawColor(renderer, wheel.r, wheel.g, wheel.b, 255);
+    /* Front wheels */
+    SDL_Rect fw1 = {car_x + car_w - 15, car_y - 3, 8, 8};
+    SDL_Rect fw2 = {car_x + car_w - 15, car_y + car_h - 5, 8, 8};
+    /* Rear wheels */
+    SDL_Rect rw1 = {car_x + 10, car_y - 3, 8, 8};
+    SDL_Rect rw2 = {car_x + 10, car_y + car_h - 5, 8, 8};
+    
+    SDL_RenderFillRect(renderer, &fw1);
+    SDL_RenderFillRect(renderer, &fw2);
+    SDL_RenderFillRect(renderer, &rw1);
+    SDL_RenderFillRect(renderer, &rw2);
+    
+    /* Motion lines when moving (speed-based animation) */
+    if (sim_speed_kph > 5U) {
+        SDL_SetRenderDrawColor(renderer, 200, 200, 220, 180);
+        int motion_lines = (int)(sim_speed_kph / 10); /* more lines = higher speed */
+        if (motion_lines > 8) motion_lines = 8;
+        
+        for(int i = 0; i < motion_lines; i++){
+            int line_x = car_x - 15 - (i * 8);
+            int line_y1 = car_y + 8 + (i * 2);
+            int line_y2 = car_y + car_h - 8 - (i * 2);
+            if (line_x > ws_x + 5) {
+                SDL_RenderDrawLine(renderer, line_x, line_y1, line_x - 6, line_y1);
+                SDL_RenderDrawLine(renderer, line_x, line_y2, line_x - 6, line_y2);
+            }
+        }
+    }
+    
+    /* Headlights (small white rectangles at front) */
+    SDL_SetRenderDrawColor(renderer, 255, 255, 220, 255);
+    SDL_Rect light1 = {car_x + car_w + 2, car_y + 6, 3, 6};
+    SDL_Rect light2 = {car_x + car_w + 2, car_y + car_h - 12, 3, 6};
+    SDL_RenderFillRect(renderer, &light1);
+    SDL_RenderFillRect(renderer, &light2);
+}
+
+/* ===========================================================
  *  GAUGES (small, upright numbers)
  * =========================================================== */
 static void draw_gauge_int(int x,int y,int r,int minV,int maxV,int major,int minor,int value,
@@ -583,7 +672,7 @@ static void draw_dashboard(int x,int y,int w,int h){
     /* small help bar */
     SDL_SetRenderDrawColor(renderer, 60,60,70,255);
     SDL_RenderFillRect(renderer,&(SDL_Rect){x+10, y+h-30, w-20, 20});
-    draw_text(x+20, y+h-28, 1, "Arrows: speed   H/L: temp   M: voice   Q/P: speed limit", COL_TEXT);
+    draw_text(x+20, y+h-28, 1, "Arrows: speed   H/L: temp   M: voice   Q/P: limit   R: spawn", COL_TEXT);
 }
 
 /* ===========================================================
@@ -617,6 +706,9 @@ static void render_frame(void){
     draw_pedestrian();          /* obstacle visible */
     draw_rain();
     draw_wipers_and_wiped_area();
+    
+    /* Draw user's car at bottom left (driver perspective) */
+    draw_user_car();
 
     /* Draw dashboard */
     draw_dashboard(dash.x,dash.y,dash.w,dash.h);
