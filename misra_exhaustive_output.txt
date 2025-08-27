@@ -1,0 +1,5 @@
+car_poc\src\io_logger.c:24:6: style: The function 'io_logger_log_outputs' is never used. [unusedFunction]
+void io_logger_log_outputs(uint32_t timestamp_ms, bool brake, uint8_t wiper_mode,
+     ^
+nofile:0:0: information: Active checkers: 110/966 (use --checkers-report=<filename> to see details) [checkersReport]
+

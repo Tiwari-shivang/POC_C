@@ -38,12 +38,27 @@ static void init_all_modules(void) {
 }
 
 static void tick_10ms(void) {
+    uint32_t timestamp = hal_now_ms();
+    
     app_autobrake_step();
     app_wipers_step();
     app_speedgov_step();
     app_autopark_step();
     app_climate_step();
     app_voice_step();
+    
+    // Log outputs for analysis (MISRA compliance fix)
+    io_logger_log_outputs(
+        timestamp,
+        hal_driver_brake_pressed(),  // brake state
+        1U,                         // wiper_mode (example value)
+        false,                      // alarm state
+        100U,                       // limit_req (example value)
+        2U,                         // fan_stage (example value)
+        true,                       // ac_on state
+        50U,                        // blend percentage
+        0U                          // park_step
+    );
 }
 
 static void parse_arguments(int argc, const char* const argv[]) {

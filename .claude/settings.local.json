@@ -20,7 +20,22 @@
       "Bash(powershell:*)",
       "Bash(where ninja)",
       "Bash(git reset:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gcc:*)",
+      "Bash(cl:*)",
+      "Bash(ctest:*)",
+      "Bash(where python)",
+      "Bash(python:*)",
+      "Bash(dir:*)",
+      "Bash(\"C:\\Program Files\\Cppcheck\\cppcheck.exe\" --enable=all --language=c --std=c99 --check-level=exhaustive -I car_poc/inc -I car_poc/cfg -I car_poc/sim car_poc/src car_poc/sim --suppress=missingIncludeSystem --inline-suppr --output-file=misra_exhaustive_output.txt)",
+      "Bash(\"C:\\Program Files\\Cppcheck\\cppcheck.exe\" --enable=all --language=c --std=c99 --check-level=exhaustive -I car_poc/inc -I car_poc/cfg -I car_poc/sim car_poc/src car_poc/sim --suppress=missingIncludeSystem --inline-suppr --output-file=final_misra_output.txt)",
+      "Bash(\"C:\\Program Files\\Cppcheck\\cppcheck.exe\" --enable=all --language=c --std=c99 --check-level=exhaustive -I car_poc/inc -I car_poc/cfg -I car_poc/sim car_poc/src car_poc/sim --suppress=missingIncludeSystem --inline-suppr --xml --output-file=cppcheck_final_xml.xml)",
+      "Bash(\"C:\\Program Files\\Cppcheck\\cppcheck-htmlreport\" --source-dir=car_poc --title=\"Mercedes POC MISRA Analysis\" --file=cppcheck_final_xml.xml --report-dir=cppcheck_html_report)",
+      "Bash(del CMakeCache.txt)",
+      "Bash(where gcc)",
+      "Bash(where cl)",
+      "Bash(del NUL)",
+      "Bash(del car_pocnul)"
     ],
     "deny": [],
     "ask": []
