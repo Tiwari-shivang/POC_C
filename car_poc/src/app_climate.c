@@ -88,13 +88,9 @@ void app_climate_step(void) {
     ambient_valid = hal_read_ambient_temp_c(&ambient_temp_x10, &sensor_ts_ms);
     humidity_valid = hal_read_humidity_pct(&humidity_pct, &sensor_ts_ms);
     
-    if (state.last_update_ms == 0U) {
-        state.last_update_ms = current_time_ms;
-        hal_set_climate(state.current_fan_stage, state.current_ac_on, state.current_blend_pct);
-        return;
-    }
+    /* Update timing */
+    dt_ms = (state.last_update_ms == 0U) ? CLIMATE_DT_MS : (current_time_ms - state.last_update_ms);
     
-    dt_ms = current_time_ms - state.last_update_ms;
     if (dt_ms < CLIMATE_DT_MS) {
         hal_set_climate(state.current_fan_stage, state.current_ac_on, state.current_blend_pct);
         return;

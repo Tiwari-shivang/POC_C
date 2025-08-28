@@ -64,30 +64,36 @@ void tearDown(void) {
 }
 
 void test_climate_cold_cabin_heating(void) {
-    mock_cabin_temp = 180;
+    app_climate_init(); /* Force fresh init */
+    mock_cabin_temp = 180;  /* 18.0°C - cold cabin */
+    mock_timestamp_ms = 1950U; /* Fresh sensor data */
     mock_current_time = 2000U;
     
-    app_climate_step();
+    app_climate_step(); /* Should do PI calculation immediately */
     
     TEST_ASSERT_TRUE(mock_fan_stage > 0U);
     TEST_ASSERT_EQUAL_UINT8(100U, mock_blend_pct);
 }
 
 void test_climate_hot_cabin_cooling(void) {
-    mock_cabin_temp = 260;
+    app_climate_init(); /* Force fresh init */
+    mock_cabin_temp = 260; /* 26.0°C - hot cabin */
+    mock_timestamp_ms = 1950U; /* Fresh sensor data */
     mock_current_time = 2000U;
     
-    app_climate_step();
+    app_climate_step(); /* Should do PI calculation immediately */
     
     TEST_ASSERT_TRUE(mock_fan_stage > 0U);
     TEST_ASSERT_TRUE(mock_ac_on);
 }
 
 void test_climate_high_humidity_ac_on(void) {
-    mock_humidity = 80U;
+    app_climate_init(); /* Force fresh init */
+    mock_humidity = 80U; /* High humidity > 70% threshold */
+    mock_timestamp_ms = 1950U; /* Fresh sensor data */
     mock_current_time = 2000U;
     
-    app_climate_step();
+    app_climate_step(); /* Should do PI calculation immediately */
     
     TEST_ASSERT_TRUE(mock_ac_on);
 }

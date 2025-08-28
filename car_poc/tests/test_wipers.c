@@ -68,6 +68,7 @@ void test_wipers_high_on_heavy_rain(void) {
 }
 
 void test_wipers_hysteresis_behavior(void) {
+    app_wipers_init(); /* Force clean state */
     mock_rain_pct = 25U;
     app_wipers_step();
     TEST_ASSERT_EQUAL_UINT8(1U, mock_wiper_mode);

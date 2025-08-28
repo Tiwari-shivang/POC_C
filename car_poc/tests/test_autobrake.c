@@ -80,16 +80,24 @@ void test_autobrake_no_brake_when_driver_override(void) {
 }
 
 void test_autobrake_debounce_before_activation(void) {
-    mock_distance_mm = 1000U;
+    /* Reset all state completely */
+    app_autobrake_init();
+    mock_distance_mm = 800U; /* Well below threshold of 1220U */
     mock_timestamp_ms = 50U;
     mock_current_time = 100U;
+    mock_vehicle_ready = true;
+    mock_driver_brake = false;
+    mock_brake_request = false;
     
+    /* First step - should not brake */
     app_autobrake_step();
     TEST_ASSERT_FALSE(mock_brake_request);
     
+    /* Second step - should not brake */
     app_autobrake_step();
     TEST_ASSERT_FALSE(mock_brake_request);
     
+    /* Third step - should brake */
     app_autobrake_step();
     TEST_ASSERT_TRUE(mock_brake_request);
 }

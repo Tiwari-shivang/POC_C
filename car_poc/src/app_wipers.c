@@ -32,20 +32,17 @@ static uint8_t determine_wiper_mode(uint8_t rain_pct, uint8_t current_mode) {
             new_mode = WIPER_MODE_OFF;
         } else if (rain_pct >= WIPER_T_RAIN_LOW) {
             new_mode = WIPER_MODE_LOW;
-        } else {
         }
     } else if (current_mode == WIPER_MODE_LOW) {
-        if (rain_pct < (WIPER_T_RAIN_INT - 5U)) {
+        if (rain_pct < (WIPER_T_RAIN_LOW - 5U)) {
             new_mode = WIPER_MODE_INT;
         } else if (rain_pct >= WIPER_T_RAIN_HIGH) {
             new_mode = WIPER_MODE_HIGH;
-        } else {
         }
     } else if (current_mode == WIPER_MODE_HIGH) {
         if (rain_pct < (WIPER_T_RAIN_LOW - 5U)) {
             new_mode = WIPER_MODE_LOW;
         }
-    } else {
     }
     
     return new_mode;

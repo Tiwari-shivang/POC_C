@@ -74,7 +74,6 @@ void app_autopark_step(void) {
                 state.gap_detections = 0U;
                 state.gap_suitable = false;
             }
-            prompt_code = 1U;
             break;
             
         case PARK_STATE_REVERSING_RIGHT:
@@ -83,7 +82,6 @@ void app_autopark_step(void) {
                 state.state = PARK_STATE_STRAIGHTENING;
                 state.step_counter = 0U;
             }
-            prompt_code = 2U;
             break;
             
         case PARK_STATE_STRAIGHTENING:
@@ -92,7 +90,6 @@ void app_autopark_step(void) {
                 state.state = PARK_STATE_REVERSING_LEFT;
                 state.step_counter = 0U;
             }
-            prompt_code = 3U;
             break;
             
         case PARK_STATE_REVERSING_LEFT:
@@ -101,15 +98,34 @@ void app_autopark_step(void) {
                 state.state = PARK_STATE_DONE;
                 state.step_counter = 0U;
             }
-            prompt_code = 4U;
             break;
             
         case PARK_STATE_DONE:
-            prompt_code = 5U;
             break;
             
         default:
             app_autopark_init();
+            break;
+    }
+    
+    /* Set prompt code based on current state after transitions */
+    switch (state.state) {
+        case PARK_STATE_SCANNING:
+            prompt_code = 1U;
+            break;
+        case PARK_STATE_REVERSING_RIGHT:
+            prompt_code = 2U;
+            break;
+        case PARK_STATE_STRAIGHTENING:
+            prompt_code = 3U;
+            break;
+        case PARK_STATE_REVERSING_LEFT:
+            prompt_code = 4U;
+            break;
+        case PARK_STATE_DONE:
+            prompt_code = 5U;
+            break;
+        default:
             prompt_code = 0U;
             break;
     }

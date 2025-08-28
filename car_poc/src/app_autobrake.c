@@ -61,13 +61,14 @@ void app_autobrake_step(void) {
         }
         
         if (state.hit_count >= AB_DEBOUNCE_HITS) {
-            should_brake = true;
             state.brake_active = true;
         }
     } else {
         state.hit_count = 0U;
         state.brake_active = false;
     }
+    
+    should_brake = state.brake_active;
     
     hal_set_brake_request(should_brake);
 }

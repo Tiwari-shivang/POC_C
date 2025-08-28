@@ -35,7 +35,10 @@
       "Bash(where gcc)",
       "Bash(where cl)",
       "Bash(del NUL)",
-      "Bash(del car_pocnul)"
+      "Bash(del car_pocnul)",
+      "Bash(./test_autobrake.exe)",
+      "Bash(test_autobrake.exe)",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []
