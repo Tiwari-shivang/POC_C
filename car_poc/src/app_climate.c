@@ -1,15 +1,14 @@
 #include "app_climate.h"
 #include "hal.h"
 #include "calib.h"
+#include "config.h"
 #include "platform.h"
 
-#define MAX_FAN_STAGE (3U)
 #define MAX_BLEND_PCT (100U)
 #define INTEGRAL_CLAMP_MAX (1000)
 #define INTEGRAL_CLAMP_MIN (-1000)
 #define PI_OUTPUT_MAX (300)
 #define PI_OUTPUT_MIN (-300)
-#define HIGH_HUMIDITY_THRESHOLD (70U)
 
 typedef struct {
     int16_t setpoint_x10;
@@ -20,10 +19,10 @@ typedef struct {
     uint8_t current_blend_pct;
 } climate_state_t;
 
-static climate_state_t state = {220, 0, 0U, 0U, false, 50U};
+static climate_state_t state = {CLIMATE_TARGET_C_X10, 0, 0U, 0U, false, 50U};
 
 void app_climate_init(void) {
-    state.setpoint_x10 = 220;
+    state.setpoint_x10 = CLIMATE_TARGET_C_X10;
     state.integral_accumulator = 0;
     state.last_update_ms = 0U;
     state.current_fan_stage = 0U;
@@ -36,7 +35,7 @@ static uint8_t map_pi_output_to_fan_stage(int32_t pi_output) {
     uint8_t fan_stage = 0U;
     
     if (abs_output > 200) {
-        fan_stage = MAX_FAN_STAGE;
+        fan_stage = FAN_STAGE_MAX;
     } else if (abs_output > 100) {
         fan_stage = 2U;
     } else if (abs_output > 50) {
@@ -77,7 +76,7 @@ void app_climate_step(void) {
     bool ac_required = false;
     
     cabin_valid = hal_read_cabin_temp_c(&cabin_temp_x10, &sensor_ts_ms);
-    if (!cabin_valid || ((current_time_ms - sensor_ts_ms) > SENSOR_STALE_MS)) {
+    if (!cabin_valid || ((current_time_ms - sensor_ts_ms) > CLIMATE_LATENCY_MS)) {
         state.current_fan_stage = 0U;
         state.current_ac_on = false;
         state.current_blend_pct = 50U;
@@ -89,9 +88,9 @@ void app_climate_step(void) {
     humidity_valid = hal_read_humidity_pct(&humidity_pct, &sensor_ts_ms);
     
     /* Update timing */
-    dt_ms = (state.last_update_ms == 0U) ? CLIMATE_DT_MS : (current_time_ms - state.last_update_ms);
+    dt_ms = (state.last_update_ms == 0U) ? CONTROL_DT_MS : (current_time_ms - state.last_update_ms);
     
-    if (dt_ms < CLIMATE_DT_MS) {
+    if (dt_ms < CONTROL_DT_MS) {
         hal_set_climate(state.current_fan_stage, state.current_ac_on, state.current_blend_pct);
         return;
     }
@@ -128,7 +127,7 @@ void app_climate_step(void) {
         ac_required = true;
     }
     
-    if (humidity_valid && (humidity_pct > HIGH_HUMIDITY_THRESHOLD)) {
+    if (humidity_valid && (humidity_pct > CLIMATE_HUMIDITY_HIGH_PCT)) {
         ac_required = true;
     }
     

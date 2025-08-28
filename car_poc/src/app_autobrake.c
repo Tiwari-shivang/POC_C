@@ -1,6 +1,7 @@
 #include "app_autobrake.h"
 #include "hal.h"
 #include "calib.h"
+#include "config.h"
 #include "platform.h"
 
 typedef struct {
@@ -23,7 +24,7 @@ void app_autobrake_step(void) {
     bool should_brake = false;
     
     /* MISRA Rule 16.5: Ensure critical state consistency */
-    platform_assert(state.hit_count <= AB_DEBOUNCE_HITS);
+    platform_assert(state.hit_count <= AUTOBRAKE_DEBOUNCE_COUNT);
     
     if (!hal_get_vehicle_ready()) {
         state.hit_count = 0U;
@@ -48,19 +49,19 @@ void app_autobrake_step(void) {
         return;
     }
     
-    if ((current_time_ms - sensor_ts_ms) > SENSOR_STALE_MS) {
+    if ((current_time_ms - sensor_ts_ms) > STALE_MS) {
         state.hit_count = 0U;
         state.brake_active = false;
         hal_set_brake_request(false);
         return;
     }
     
-    if (distance_mm <= AB_THRESHOLD_MM) {
-        if (state.hit_count < AB_DEBOUNCE_HITS) {
+    if (distance_mm <= BRAKE_THRESH_MM) {
+        if (state.hit_count < AUTOBRAKE_DEBOUNCE_COUNT) {
             state.hit_count++;
         }
         
-        if (state.hit_count >= AB_DEBOUNCE_HITS) {
+        if (state.hit_count >= AUTOBRAKE_DEBOUNCE_COUNT) {
             state.brake_active = true;
         }
     } else {

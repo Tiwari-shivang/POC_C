@@ -1,7 +1,24 @@
 #include "app_speedgov.h"
 #include "hal.h"
 #include "calib.h"
+#include "config.h"
 #include "platform.h"
+
+#ifndef SPEEDGOV_DEFAULT_LIMIT_KPH
+#define SPEEDGOV_DEFAULT_LIMIT_KPH        (50U)
+#endif
+
+#ifndef SPEEDGOV_DEBOUNCE_COUNT
+#define SPEEDGOV_DEBOUNCE_COUNT           (2U)
+#endif
+
+#ifndef SPEEDGOV_HYSTERESIS_KPH
+#define SPEEDGOV_HYSTERESIS_KPH           (3U)
+#endif
+
+#ifndef STALE_MS
+#define STALE_MS                          (100U)
+#endif
 
 typedef struct {
     uint16_t current_limit_kph;
@@ -9,10 +26,10 @@ typedef struct {
     bool alarm_active;
 } speedgov_state_t;
 
-static speedgov_state_t state = {50U, 0U, false};
+static speedgov_state_t state = {SPEEDGOV_DEFAULT_LIMIT_KPH, 0U, false};
 
 void app_speedgov_init(void) {
-    state.current_limit_kph = 50U;
+    state.current_limit_kph = SPEEDGOV_DEFAULT_LIMIT_KPH;
     state.overspeed_count = 0U;
     state.alarm_active = false;
 }
@@ -29,7 +46,7 @@ void app_speedgov_step(void) {
     bool should_alarm = false;
     
     speed_limit_updated = hal_poll_speed_limit_kph(&new_limit);
-    if (speed_limit_updated) {
+    if (speed_limit_updated && (new_limit > 0U)) {
         state.current_limit_kph = new_limit;
         state.overspeed_count = 0U;
         state.alarm_active = false;
@@ -44,28 +61,28 @@ void app_speedgov_step(void) {
         return;
     }
     
-    if ((current_time_ms - sensor_ts_ms) > SENSOR_STALE_MS) {
+    if ((current_time_ms - sensor_ts_ms) > STALE_MS) {
         state.overspeed_count = 0U;
         state.alarm_active = false;
         hal_set_alarm(false);
         return;
     }
     
-    overspeed_threshold = state.current_limit_kph + SPEED_ALARM_TOL_KPH;
-    clear_threshold = state.current_limit_kph - SPEED_HYSTERESIS_KPH;
+    overspeed_threshold = state.current_limit_kph;
+    clear_threshold = state.current_limit_kph - SPEEDGOV_HYSTERESIS_KPH;
     
     if (state.alarm_active) {
-        if (vehicle_speed_kph < clear_threshold) {
+        if (vehicle_speed_kph <= clear_threshold) {
             state.alarm_active = false;
             state.overspeed_count = 0U;
         }
     } else {
         if (vehicle_speed_kph > overspeed_threshold) {
-            if (state.overspeed_count < SPEED_ALARM_DEBOUNCE) {
+            if (state.overspeed_count < SPEEDGOV_DEBOUNCE_COUNT) {
                 state.overspeed_count++;
             }
             
-            if (state.overspeed_count >= SPEED_ALARM_DEBOUNCE) {
+            if (state.overspeed_count >= SPEEDGOV_DEBOUNCE_COUNT) {
                 state.alarm_active = true;
             }
         } else {

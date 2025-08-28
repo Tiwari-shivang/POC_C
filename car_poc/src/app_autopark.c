@@ -1,6 +1,7 @@
 #include "app_autopark.h"
 #include "hal.h"
 #include "calib.h"
+#include "config.h"
 #include "platform.h"
 
 typedef enum {
@@ -30,12 +31,17 @@ void app_autopark_init(void) {
 static bool is_speed_suitable_for_parking(void) {
     uint16_t speed_kph = 0U;
     uint32_t ts_ms = 0U;
+    uint32_t current_time_ms = hal_now_ms();
     
     if (!hal_read_vehicle_speed_kph(&speed_kph, &ts_ms)) {
         return false;
     }
     
-    return (speed_kph <= 10U);
+    if ((current_time_ms - ts_ms) > STALE_MS) {
+        return false;
+    }
+    
+    return (speed_kph <= AUTOPARK_MAX_SPEED_KPH);
 }
 
 void app_autopark_step(void) {
@@ -53,7 +59,7 @@ void app_autopark_step(void) {
     
     sensor_valid = hal_parking_gap_read(&gap_data, &sensor_ts_ms);
     
-    if (!sensor_valid || ((current_time_ms - sensor_ts_ms) > SENSOR_STALE_MS)) {
+    if (!sensor_valid || ((current_time_ms - sensor_ts_ms) > STALE_MS)) {
         if (state.state != PARK_STATE_SCANNING) {
             app_autopark_init();
         }
@@ -63,9 +69,9 @@ void app_autopark_step(void) {
     
     switch (state.state) {
         case PARK_STATE_SCANNING:
-            if (gap_data.found && (gap_data.width_mm >= PARK_MIN_GAP_MM)) {
+            if (gap_data.found && (gap_data.width_mm >= AUTOPARK_MIN_GAP_MM)) {
                 state.gap_detections++;
-                if (state.gap_detections >= 3U) {
+                if (state.gap_detections >= AUTOPARK_DEBOUNCE_COUNT) {
                     state.gap_suitable = true;
                     state.state = PARK_STATE_REVERSING_RIGHT;
                     state.step_counter = 0U;
@@ -77,6 +83,11 @@ void app_autopark_step(void) {
             break;
             
         case PARK_STATE_REVERSING_RIGHT:
+            /* Check if gap is still valid, revert to scanning if lost */
+            if (!gap_data.found || (gap_data.width_mm < AUTOPARK_MIN_GAP_MM)) {
+                app_autopark_init();
+                break;
+            }
             state.step_counter++;
             if (state.step_counter >= 50U) {
                 state.state = PARK_STATE_STRAIGHTENING;
@@ -85,6 +96,11 @@ void app_autopark_step(void) {
             break;
             
         case PARK_STATE_STRAIGHTENING:
+            /* Check if gap is still valid, revert to scanning if lost */
+            if (!gap_data.found || (gap_data.width_mm < AUTOPARK_MIN_GAP_MM)) {
+                app_autopark_init();
+                break;
+            }
             state.step_counter++;
             if (state.step_counter >= 20U) {
                 state.state = PARK_STATE_REVERSING_LEFT;
@@ -93,6 +109,11 @@ void app_autopark_step(void) {
             break;
             
         case PARK_STATE_REVERSING_LEFT:
+            /* Check if gap is still valid, revert to scanning if lost */
+            if (!gap_data.found || (gap_data.width_mm < AUTOPARK_MIN_GAP_MM)) {
+                app_autopark_init();
+                break;
+            }
             state.step_counter++;
             if (state.step_counter >= 50U) {
                 state.state = PARK_STATE_DONE;
@@ -111,19 +132,15 @@ void app_autopark_step(void) {
     /* Set prompt code based on current state after transitions */
     switch (state.state) {
         case PARK_STATE_SCANNING:
-            prompt_code = 1U;
+            prompt_code = AUTOPARK_PROMPT_SCAN;
             break;
         case PARK_STATE_REVERSING_RIGHT:
-            prompt_code = 2U;
-            break;
         case PARK_STATE_STRAIGHTENING:
-            prompt_code = 3U;
-            break;
         case PARK_STATE_REVERSING_LEFT:
-            prompt_code = 4U;
+            prompt_code = AUTOPARK_PROMPT_ALIGN;
             break;
         case PARK_STATE_DONE:
-            prompt_code = 5U;
+            prompt_code = 0U;
             break;
         default:
             prompt_code = 0U;
