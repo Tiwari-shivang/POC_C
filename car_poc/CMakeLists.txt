@@ -171,6 +171,37 @@ foreach(TEST_SOURCE ${TEST_SOURCES})
     endif()
 endforeach()
  
+# -------- Eval hooks (always built; default no-ops) --------
+add_library(eval_hooks STATIC
+    eval/hooks/eval_hooks.c
+)
+target_include_directories(eval_hooks PUBLIC eval/hooks)
+
+# -------- Metrics impl (link only in eval builds/tests) --------
+add_library(metrics_autobrake STATIC
+    eval/metrics/metrics_autobrake.c
+)
+target_include_directories(metrics_autobrake PUBLIC eval/hooks)
+
+# -------- Link eval_hooks to main target --------
+target_link_libraries(car_poc PRIVATE eval_hooks)
+
+# -------- Unity eval test (headless) --------
+add_executable(test_autobrake_eval tests/test_autobrake_eval.c src/app_autobrake.c tests/unity/unity.c src/platform_pc.c)
+target_link_libraries(test_autobrake_eval PRIVATE
+    metrics_autobrake
+)
+target_include_directories(test_autobrake_eval PRIVATE tests/unity inc cfg sim eval/hooks)
+if(NOT MSVC)
+    target_link_libraries(test_autobrake_eval m)
+endif()
+
+# -------- CTest entry for eval --------
+add_test(NAME eval_autobrake_ped_close COMMAND test_autobrake_eval)
+
+# -------- Reports dir --------
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/eval/reports)
+
 # -------- Static analysis convenience target --------
 add_custom_target(static_analysis
     COMMAND ${CMAKE_SOURCE_DIR}/tools/run_static.sh
