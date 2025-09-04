@@ -1,0 +1,113 @@
+
+================================================================================
+                   MERCEDES POC - LINES OF CODE ANALYSIS
+================================================================================
+
+Source Files (.c)
+----------------------------------------
+  hal_sdl.c                      | Total:   845 | Code:   555 | Comments:  183 | Blank:  107
+  hal_interactive.c              | Total:   308 | Code:   257 | Comments:    6 | Blank:   45
+  hal_mock_pc.c                  | Total:   234 | Code:   186 | Comments:    5 | Blank:   43
+  main.c                         | Total:   206 | Code:   138 | Comments:   23 | Blank:   45
+  app_autopark.c                 | Total:   151 | Code:   122 | Comments:    9 | Blank:   20
+  app_climate.c                  | Total:   141 | Code:   103 | Comments:   11 | Blank:   27
+  app_autobrake.c                | Total:   110 | Code:    78 | Comments:   14 | Blank:   18
+  app_wipers.c                   | Total:   119 | Code:    74 | Comments:   29 | Blank:   16
+  app_voice.c                    | Total:   100 | Code:    70 | Comments:    8 | Blank:   22
+  app_speedgov.c                 | Total:    96 | Code:    63 | Comments:   17 | Blank:   16
+  io_logger.c                    | Total:    51 | Code:    40 | Comments:    2 | Blank:    9
+  platform_sdl.c                 | Total:    51 | Code:    36 | Comments:    6 | Blank:    9
+  platform_pc.c                  | Total:    42 | Code:    20 | Comments:   16 | Blank:    6
+  Subtotal                       | Total:  2454 | Code:  1742 | Comments:  329 | Blank:  383
+
+Header Files (.h)
+----------------------------------------
+  hal.h                          | Total:    34 | Code:    22 | Comments:    5 | Blank:    7
+  io_logger.h                    | Total:    13 | Code:     5 | Comments:    5 | Blank:    3
+  app_autobrake.h                | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  app_autopark.h                 | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  app_climate.h                  | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  app_speedgov.h                 | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  app_voice.h                    | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  app_wipers.h                   | Total:     7 | Code:     2 | Comments:    3 | Blank:    2
+  platform.h                     | Total:    11 | Code:     1 | Comments:    6 | Blank:    4
+  config.h                       | Total:    30 | Code:     0 | Comments:   24 | Blank:    6
+  Subtotal                       | Total:   130 | Code:    40 | Comments:   58 | Blank:   32
+
+Test Files
+----------------------------------------
+  test_autopark.c                | Total:   289 | Code:   158 | Comments:   83 | Blank:   48
+  test_speedgov.c                | Total:   275 | Code:   143 | Comments:   78 | Blank:   54
+  test_wipers.c                  | Total:   293 | Code:   141 | Comments:  109 | Blank:   43
+  test_climate.c                 | Total:   255 | Code:   139 | Comments:   71 | Blank:   45
+  test_autobrake.c               | Total:   242 | Code:   131 | Comments:   69 | Blank:   42
+  test_autobrake_eval.c          | Total:   117 | Code:    68 | Comments:   32 | Blank:   17
+  Subtotal                       | Total:  1471 | Code:   780 | Comments:  442 | Blank:  249
+
+Simulation Files
+----------------------------------------
+  scenario.c                     | Total:   106 | Code:    89 | Comments:    4 | Blank:   13
+  Subtotal                       | Total:   106 | Code:    89 | Comments:    4 | Blank:   13
+
+Simulation Headers
+----------------------------------------
+  scenario.h                     | Total:    28 | Code:    17 | Comments:    6 | Blank:    5
+  Subtotal                       | Total:    28 | Code:    17 | Comments:    6 | Blank:    5
+
+Configuration Headers
+----------------------------------------
+  calib.h                        | Total:    24 | Code:     0 | Comments:   17 | Blank:    7
+  Subtotal                       | Total:    24 | Code:     0 | Comments:   17 | Blank:    7
+
+Evaluation Files
+----------------------------------------
+  metrics_autobrake.c            | Total:    87 | Code:    70 | Comments:    7 | Blank:   10
+  eval_hooks.c                   | Total:    10 | Code:     6 | Comments:    1 | Blank:    3
+  Subtotal                       | Total:    97 | Code:    76 | Comments:    8 | Blank:   13
+
+Unity Test Framework
+----------------------------------------
+  unity.c                        | Total:   167 | Code:   142 | Comments:    4 | Blank:   21
+  unity.h                        | Total:    42 | Code:    18 | Comments:   17 | Blank:    7
+  Subtotal                       | Total:   209 | Code:   160 | Comments:   21 | Blank:   28
+
+================================================================================
+SUMMARY BY CATEGORY
+================================================================================
+Source Files (.c)              | Code Lines:  1742 ( 60.0%) | Files:  13
+Test Files                     | Code Lines:   780 ( 26.9%) | Files:   6
+Unity Test Framework           | Code Lines:   160 (  5.5%) | Files:   2
+Simulation Files               | Code Lines:    89 (  3.1%) | Files:   1
+Evaluation Files               | Code Lines:    76 (  2.6%) | Files:   2
+Header Files (.h)              | Code Lines:    40 (  1.4%) | Files:  10
+Simulation Headers             | Code Lines:    17 (  0.6%) | Files:   1
+Configuration Headers          | Code Lines:     0 (  0.0%) | Files:   1
+
+================================================================================
+OVERALL STATISTICS
+================================================================================
+Total Lines of Code (excluding blank/comments): 2,904
+Total Lines (including everything):             4,519
+Comment Lines:                                   885
+Blank Lines:                                     730
+
+Code Density:     64.3%
+Comment Density:  19.6%
+Blank Lines:      16.2%
+
+================================================================================
+MODULE BREAKDOWN (Core Application Modules)
+================================================================================
+  Auto Brake System         |    80 lines
+  Windshield Wipers         |    76 lines
+  Speed Governor            |    65 lines
+  Auto Parking              |   124 lines
+  Climate Control           |   105 lines
+  Voice Assistant           |    72 lines
+  Total Core Modules        |   522 lines
+
+Test Code Ratio: 36.7% (Test LOC / Production LOC)
+
+================================================================================
+                            END OF REPORT
+================================================================================

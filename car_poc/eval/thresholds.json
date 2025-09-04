@@ -1,0 +1,8 @@
+{
+  "autobrake": {
+    "detect_latency_ms_max": 180,
+    "react_latency_ms_max": 60,
+    "false_positive_max": 0,
+    "false_negative_max": 0
+  }
+}

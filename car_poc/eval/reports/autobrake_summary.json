@@ -1,0 +1,8 @@
+{
+  "autobrake": {
+    "detect_latency_ms": 20,
+    "react_latency_ms": 0,
+    "events": {"first": 650, "flag": 670, "assert": 670},
+    "samples": 280
+  }
+}

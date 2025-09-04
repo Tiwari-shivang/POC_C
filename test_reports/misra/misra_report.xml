@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="2.18.0"/>
+    <errors>
+        <error id="missingInclude" severity="information" msg="Include file: &quot;eval_hooks.h&quot; not found." verbose="Include file: &quot;eval_hooks.h&quot; not found.">
+            <location file="C:/Users/shivang.tiwari/Mercedes_POC/car_poc/src/app_autobrake.c" line="6" column="0"/>
+        </error>
+        <error id="checkersReport" severity="information" msg="Active checkers: 110/966 (use --checkers-report=&lt;filename&gt; to see details)" verbose="Active checkers: 110/966 (use --checkers-report=&lt;filename&gt; to see details)"/>
+    </errors>
+</results>

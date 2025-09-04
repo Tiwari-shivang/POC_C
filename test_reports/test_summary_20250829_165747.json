@@ -1,0 +1,18 @@
+﻿{
+    "ExecutionTime":  "16:57:47",
+    "ReportsDirectory":  "C:\\Users\\shivang.tiwari\\Mercedes_POC\\test_reports",
+    "ExecutionDate":  "2025-08-29",
+    "ReportsGenerated":  {
+                             "Coverage":  true,
+                             "Evaluation":  true,
+                             "MISRA":  true
+                         },
+    "TestResults":  {
+                        "Details":  [
+
+                                    ],
+                        "Skipped":  5,
+                        "Failed":  0,
+                        "Passed":  0
+                    }
+}

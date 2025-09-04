@@ -1,0 +1,14 @@
+{
+  "seed": 7,
+  "duration_ms": 12000,
+  "tick_ms": 10,
+  "initial_state": { "speed_kph": 50, "outside_temp_c": 25 },
+  "stimuli": [
+    { "t_ms": 1500, "type": "spawn_pedestrian", "x_m": 32.0, "y_m": 0.0, "vx_mps": -1.2, "width_m": 0.5 },
+    { "t_ms": 2000, "type": "rain_intensity", "value": 0.0 }
+  ],
+  "assertions": [
+    { "metric": "autobrake.detect_latency_ms", "op": "<=", "value": 180 },
+    { "metric": "autobrake.react_latency_ms",  "op": "<=", "value": 60  }
+  ]
+}

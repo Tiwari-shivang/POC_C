@@ -38,7 +38,20 @@
       "Bash(del car_pocnul)",
       "Bash(./test_autobrake.exe)",
       "Bash(test_autobrake.exe)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(./test_autopark.exe)",
+      "Bash(./test_climate.exe)",
+      "Bash(./test_speedgov.exe)",
+      "Bash(./test_wipers.exe)",
+      "Bash(./debug_wipers.exe)",
+      "Bash(./test_individual.exe)",
+      "Bash(./test_stale.exe)",
+      "Bash(timeout:*)",
+      "Bash(./build_eval/Release/test_autobrake_eval.exe)",
+      "Bash(if exist build_coverage rmdir /s /q build_coverage)",
+      "Bash(run_all_tests.bat)",
+      "Bash(.run_all_tests.bat)",
+      "Bash(mingw32-make:*)"
     ],
     "deny": [],
     "ask": []
