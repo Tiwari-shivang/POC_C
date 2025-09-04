@@ -26,6 +26,7 @@ set(COMMON_SOURCES
     src/app_climate.c
     src/app_voice.c
     src/io_logger.c
+    src/speed_sign_vision.c
     sim/scenario.c
 )
  
@@ -91,6 +92,19 @@ else()
     endif()
 endif()
  
+# -------- OpenCV Support --------
+option(USE_OPENCV "Enable OpenCV for speed sign recognition" OFF)
+if(USE_OPENCV)
+    find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
+    if(OpenCV_FOUND)
+        add_compile_definitions(USE_OPENCV=1)
+        message(STATUS "OpenCV ${OpenCV_VERSION} found")
+    else()
+        message(WARNING "OpenCV not found; speed sign recognition will be disabled")
+        set(USE_OPENCV OFF)
+    endif()
+endif()
+
 # -------- Target --------
 add_executable(car_poc ${PLATFORM_SOURCES})
  
@@ -147,6 +161,19 @@ if(NOT HEADLESS)
             target_link_libraries(car_poc PRIVATE SDL2)
         endif()
     endif()
+endif()
+
+# -------- OpenCV C++ source --------
+if(USE_OPENCV)
+    # Enable C++ for OpenCV integration
+    enable_language(CXX)
+    set_property(TARGET car_poc PROPERTY CXX_STANDARD 11)
+    set_property(TARGET car_poc PROPERTY CXX_STANDARD_REQUIRED ON)
+    
+    # Add OpenCV C++ source
+    target_sources(car_poc PRIVATE src/opencv_speed_detection.cpp)
+    target_link_libraries(car_poc PRIVATE ${OpenCV_LIBS})
+    target_include_directories(car_poc PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
  
 # -------- Tests --------

@@ -1,0 +1,19 @@
+{
+  "seed": 30,
+  "duration_ms": 15000,
+  "tick_ms": 10,
+  "initial_state": { "speed_kph": 40, "outside_temp_c": 25 },
+  "stimuli": [
+    { "t_ms": 2000, "type": "spawn_speed_sign", "speed_limit": 80, "x_position": "right" },
+    { "t_ms": 4000, "type": "vehicle_speed", "value": 85 },
+    { "t_ms": 7000, "type": "spawn_speed_sign", "speed_limit": 60, "x_position": "right" },
+    { "t_ms": 9000, "type": "vehicle_speed", "value": 45 },
+    { "t_ms": 12000, "type": "spawn_speed_sign", "speed_limit": 100, "x_position": "right" }
+  ],
+  "assertions": [
+    { "metric": "speedgov.opencv_detection_latency_ms", "op": "<=", "value": 1000 },
+    { "metric": "speedgov.detection_confidence_min", "op": ">=", "value": 0.7 },
+    { "metric": "speedgov.correct_speed_limit_detected", "op": "==", "value": 1 },
+    { "metric": "speedgov.vision_system_active", "op": "==", "value": 1 }
+  ]
+}

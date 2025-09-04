@@ -1,6 +1,10 @@
 #include "hal.h"
 #include "platform.h"
 
+#ifdef USE_OPENCV
+#include "speed_sign_vision.h"
+#endif
+
 #if !HEADLESS_BUILD
 #include <SDL.h>
 #include <math.h>
@@ -73,6 +77,33 @@ static int ws_x=0, ws_y=0, ws_w=0, ws_h=0;
 #define MAX_BUILDINGS 12
 typedef struct { float x; int w; int h; SDL_Color col; uint32_t seed; } building_t;
 static building_t buildings[MAX_BUILDINGS];
+
+/* ---- Road Signs (Speed Limits and STOP signs) ---- */
+#define MAX_ROAD_SIGNS 5
+typedef enum {
+    SIGN_TYPE_SPEED_LIMIT = 0,
+    SIGN_TYPE_STOP = 1
+} sign_type_t;
+
+typedef struct { 
+    float x; 
+    sign_type_t type;
+    int speed_limit;            /* for speed limit signs */
+    uint32_t spawn_time_ms;
+    bool active;
+    uint32_t detected_time_ms;  /* when detected in center view */
+    float confidence;           /* detection confidence */
+    bool dashboard_updated;     /* has dashboard been updated for this sign */
+} road_sign_t;
+static road_sign_t road_signs[MAX_ROAD_SIGNS];
+static uint32_t next_sign_spawn_ms = 0U;
+
+#ifdef USE_OPENCV
+/* ---- OpenCV Vision Integration ---- */
+static uint32_t last_vision_process_ms = 0U;
+static uint32_t vision_process_interval_ms = 100U; /* Process every 100ms */
+static speed_sign_result_t detected_sign = {0U, 0.0f, 0U};
+#endif
 
 /* ---- Misc helpers ---- */
 static uint32_t now_ms(void){ return platform_get_time_ms(); }
@@ -429,6 +460,273 @@ static void buildings_update_and_draw(float px_per_tick){
 }
 
 /* ===========================================================
+ *  SPEED SIGN BOARDS (100x100 px, red circle, white text)
+ * =========================================================== */
+static void road_signs_init(void){
+    for(int i = 0; i < MAX_ROAD_SIGNS; i++){
+        road_signs[i].active = false;
+        road_signs[i].x = 0.0f;
+        road_signs[i].type = SIGN_TYPE_SPEED_LIMIT;
+        road_signs[i].speed_limit = 50;
+        road_signs[i].spawn_time_ms = 0U;
+        road_signs[i].detected_time_ms = 0U;
+        road_signs[i].confidence = 0.0f;
+        road_signs[i].dashboard_updated = false;
+    }
+    next_sign_spawn_ms = now_ms() + 3000U; /* first sign in 3 seconds */
+}
+
+static void spawn_road_sign(void){
+    /* Find inactive sign slot */
+    for(int i = 0; i < MAX_ROAD_SIGNS; i++){
+        if(!road_signs[i].active){
+            road_signs[i].active = true;
+            road_signs[i].x = (float)(ws_x + ws_w + 150); /* spawn off right edge */
+            
+            uint32_t seed = now_ms() * 1103515245u + 12345u + (uint32_t)i;
+            
+            /* Decide sign type: 70% speed limit, 30% STOP sign */
+            if((seed % 100) < 70){
+                /* Speed limit sign */
+                road_signs[i].type = SIGN_TYPE_SPEED_LIMIT;
+                int speed_options[] = {30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130};
+                int num_options = sizeof(speed_options) / sizeof(speed_options[0]);
+                road_signs[i].speed_limit = speed_options[(seed / 100) % num_options];
+            } else {
+                /* STOP sign */
+                road_signs[i].type = SIGN_TYPE_STOP;
+                road_signs[i].speed_limit = 0; /* Not applicable for STOP signs */
+            }
+            
+            road_signs[i].spawn_time_ms = now_ms();
+            road_signs[i].detected_time_ms = 0U;
+            road_signs[i].confidence = 0.0f;
+            road_signs[i].dashboard_updated = false;
+            
+            /* Schedule next sign spawn in 8-12 seconds */
+            next_sign_spawn_ms = now_ms() + 8000U + (seed % 4000U);
+            
+            if(road_signs[i].type == SIGN_TYPE_SPEED_LIMIT){
+                printf("Spawned SPEED LIMIT sign: %d km/h\n", road_signs[i].speed_limit);
+            } else {
+                printf("Spawned STOP sign\n");
+            }
+            break;
+        }
+    }
+}
+
+static void draw_speed_limit_sign(road_sign_t* sign){
+    if(!sign->active) return;
+    
+    int sign_size = 120; /* Larger for better visibility */
+    int sign_x = (int)sign->x;
+    int sign_y = ws_y + ws_h - sign_size - 30; /* bottom of windshield */
+    
+    /* White background circle */
+    SDL_Color bg_white = {255, 255, 255, 255};
+    SDL_SetRenderDrawColor(renderer, bg_white.r, bg_white.g, bg_white.b, 255);
+    
+    /* Draw filled circle */
+    int radius = sign_size / 2;
+    int center_x = sign_x + radius;
+    int center_y = sign_y + radius;
+    
+    for(int w = 0; w < sign_size; w++){
+        for(int h = 0; h < sign_size; h++){
+            int dx = w - radius;
+            int dy = h - radius;
+            if((dx*dx + dy*dy) <= (radius*radius)){
+                SDL_RenderDrawPoint(renderer, sign_x + w, sign_y + h);
+            }
+        }
+    }
+    
+    /* Red border circle */
+    SDL_Color red_border = {220, 20, 20, 255};
+    SDL_SetRenderDrawColor(renderer, red_border.r, red_border.g, red_border.b, 255);
+    
+    /* Draw thick circle border */
+    for(int thickness = 0; thickness < 10; thickness++){
+        int border_radius = radius - 8 - thickness;
+        if(border_radius > 0){
+            for(int angle = 0; angle < 360; angle += 1){
+                int x = center_x + (int)(border_radius * cosf(deg2rad((float)angle)));
+                int y = center_y + (int)(border_radius * sinf(deg2rad((float)angle)));
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
+        }
+    }
+    
+    /* Speed limit number (black text) */
+    SDL_Color black_text = {0, 0, 0, 255};
+    char speed_str[8];
+    snprintf(speed_str, sizeof(speed_str), "%d", sign->speed_limit);
+    
+    /* Calculate text position to center it */
+    int digit_count = (sign->speed_limit >= 100) ? 3 : ((sign->speed_limit >= 10) ? 2 : 1);
+    int text_scale = (digit_count >= 3) ? 5 : 6; /* bigger text */
+    int text_width = digit_count * 6 * text_scale;
+    int text_x = center_x - text_width / 2;
+    int text_y = center_y - (7 * text_scale) / 2;
+    
+    draw_text(text_x, text_y, text_scale, speed_str, black_text);
+    
+    /* Post/pole (gray rectangle below sign) */
+    SDL_Color pole_gray = {120, 120, 130, 255};
+    SDL_SetRenderDrawColor(renderer, pole_gray.r, pole_gray.g, pole_gray.b, 255);
+    SDL_Rect pole = {center_x - 4, sign_y + sign_size, 8, 50};
+    SDL_RenderFillRect(renderer, &pole);
+}
+
+static void draw_stop_sign(road_sign_t* sign){
+    if(!sign->active) return;
+    
+    int sign_size = 120;
+    int sign_x = (int)sign->x;
+    int sign_y = ws_y + ws_h - sign_size - 30;
+    
+    /* Red octagonal background */
+    SDL_Color red_bg = {220, 20, 20, 255};
+    SDL_SetRenderDrawColor(renderer, red_bg.r, red_bg.g, red_bg.b, 255);
+    
+    /* Draw octagon (simplified as filled rectangle with cut corners) */
+    int center_x = sign_x + sign_size/2;
+    int center_y = sign_y + sign_size/2;
+    int oct_size = sign_size - 10;
+    
+    /* Main rectangle */
+    SDL_Rect main_rect = {center_x - oct_size/3, center_y - oct_size/2, (oct_size*2)/3, oct_size};
+    SDL_RenderFillRect(renderer, &main_rect);
+    
+    /* Top and bottom rectangles */
+    SDL_Rect top_rect = {center_x - oct_size/2, center_y - oct_size/3, oct_size, (oct_size*2)/3};
+    SDL_RenderFillRect(renderer, &top_rect);
+    
+    /* White border */
+    SDL_Color white_border = {255, 255, 255, 255};
+    SDL_SetRenderDrawColor(renderer, white_border.r, white_border.g, white_border.b, 255);
+    for(int i = 0; i < 4; i++){
+        SDL_Rect border1 = {main_rect.x - i, main_rect.y - i, main_rect.w + 2*i, main_rect.h + 2*i};
+        SDL_Rect border2 = {top_rect.x - i, top_rect.y - i, top_rect.w + 2*i, top_rect.h + 2*i};
+        SDL_RenderDrawRect(renderer, &border1);
+        SDL_RenderDrawRect(renderer, &border2);
+    }
+    
+    /* "STOP" text (white) */
+    SDL_Color white_text = {255, 255, 255, 255};
+    int text_x = center_x - 30;
+    int text_y = center_y - 20;
+    draw_text(text_x, text_y, 4, "STOP", white_text);
+    
+    /* Post/pole */
+    SDL_Color pole_gray = {120, 120, 130, 255};
+    SDL_SetRenderDrawColor(renderer, pole_gray.r, pole_gray.g, pole_gray.b, 255);
+    SDL_Rect pole = {center_x - 4, sign_y + sign_size, 8, 50};
+    SDL_RenderFillRect(renderer, &pole);
+}
+
+static void draw_road_sign(road_sign_t* sign){
+    if(!sign->active) return;
+    
+    if(sign->type == SIGN_TYPE_SPEED_LIMIT){
+        draw_speed_limit_sign(sign);
+    } else if(sign->type == SIGN_TYPE_STOP){
+        draw_stop_sign(sign);
+    }
+    
+    /* Show detection indicator if sign has been detected */
+    if (sign->detected_time_ms > 0U) {
+        /* Bright green detection indicator */
+        SDL_Color detected_green = {0, 255, 0, 255};
+        SDL_SetRenderDrawColor(renderer, detected_green.r, detected_green.g, detected_green.b, 255);
+        
+        int sign_x = (int)sign->x;
+        int sign_y = ws_y + ws_h - 120 - 30;
+        int indicator_x = sign_x + 130;
+        int indicator_y = sign_y + 10;
+        int indicator_radius = 12;
+        
+        /* Larger detection indicator circle */
+        for(int w = 0; w < indicator_radius * 2; w++){
+            for(int h = 0; h < indicator_radius * 2; h++){
+                int dx = w - indicator_radius;
+                int dy = h - indicator_radius;
+                if((dx*dx + dy*dy) <= (indicator_radius*indicator_radius)){
+                    SDL_RenderDrawPoint(renderer, indicator_x + w, indicator_y + h);
+                }
+            }
+        }
+        
+        /* "DETECTED" text */
+        draw_text(indicator_x - 20, indicator_y - 25, 2, "DETECTED", detected_green);
+        
+        /* Show what was detected */
+        if(sign->type == SIGN_TYPE_SPEED_LIMIT){
+            char detected_str[32];
+            snprintf(detected_str, sizeof(detected_str), "%d KM/H", sign->speed_limit);
+            draw_text(indicator_x - 25, indicator_y + 30, 1, detected_str, detected_green);
+        } else {
+            draw_text(indicator_x - 15, indicator_y + 30, 1, "STOP", detected_green);
+        }
+    }
+}
+
+static void road_signs_update_and_draw(float px_per_tick){
+    uint32_t current_time = now_ms();
+    
+    /* Spawn new signs every 8-12 seconds */
+    if(current_time >= next_sign_spawn_ms && sim_speed_kph > 5U){
+        spawn_road_sign();
+    }
+    
+    /* Update and draw existing signs */
+    for(int i = 0; i < MAX_ROAD_SIGNS; i++){
+        if(road_signs[i].active){
+            /* Check if sign is in "detection zone" (center portion of windshield) */
+            int sign_center_x = (int)road_signs[i].x + 60; /* center of 120px sign */
+            int detection_zone_start = ws_x + ws_w/3;       /* left third of windshield */
+            int detection_zone_end = ws_x + (2*ws_w)/3;     /* right third of windshield */
+            
+            /* Detect and process sign when in center view */
+            if(sign_center_x >= detection_zone_start && sign_center_x <= detection_zone_end &&
+               road_signs[i].detected_time_ms == 0U) {
+                
+                /* Mark as detected */
+                road_signs[i].detected_time_ms = current_time;
+                road_signs[i].confidence = 0.95f; /* High confidence for simulation */
+                
+                if(road_signs[i].type == SIGN_TYPE_SPEED_LIMIT && !road_signs[i].dashboard_updated){
+                    /* Update dashboard for speed limit signs */
+                    sim_speed_limit = (uint16_t)road_signs[i].speed_limit;
+                    road_signs[i].dashboard_updated = true;
+                    
+                    printf("🚗 SPEED LIMIT DETECTED: %d km/h → Dashboard Updated!\n", 
+                           road_signs[i].speed_limit);
+                } else if(road_signs[i].type == SIGN_TYPE_STOP){
+                    printf("🛑 STOP SIGN DETECTED: Vehicle should prepare to stop!\n");
+                    
+                    /* Optional: Trigger emergency brake or warning */
+                    /* This could integrate with the auto-brake system */
+                }
+            }
+            
+            /* Move sign backward (car moving forward effect) */
+            if(sim_speed_kph > 0U){
+                road_signs[i].x -= px_per_tick;
+            }
+            
+            /* Deactivate sign when it goes off screen */
+            if(road_signs[i].x + 120 < ws_x){
+                road_signs[i].active = false;
+            } else {
+                draw_road_sign(&road_signs[i]);
+            }
+        }
+    }
+}
+
+/* ===========================================================
  *  WIPERS (center-mounted, 20° ↔ 120°)
  * =========================================================== */
 static void draw_wipers_and_wiped_area(void){
@@ -687,7 +985,11 @@ static void render_frame(void){
     SDL_Rect dash = { 0, winH/2, winW, winH - winH/2 };   /* Bottom: dashboard full width */
 
     static bool once=false;
-    if(!once){ buildings_init(ws_x,ws_y,ws_w,ws_h); once=true; }
+    if(!once){ 
+        buildings_init(ws_x,ws_y,ws_w,ws_h); 
+        road_signs_init();
+        once=true; 
+    }
 
     /* physics/auto systems */
     rain_update();
@@ -703,9 +1005,39 @@ static void render_frame(void){
     /* Draw windshield layers */
     float px_per_tick = (float)sim_speed_kph * 0.15f; /* building parallax */
     buildings_update_and_draw(px_per_tick);
+    road_signs_update_and_draw(px_per_tick); /* road signs move like buildings */
     draw_pedestrian();          /* obstacle visible */
     draw_rain();
     draw_wipers_and_wiped_area();
+    
+    /* Draw detection zone indicator (shows where camera is looking) */
+    if(sim_speed_kph > 0U){ /* only show when moving */
+        SDL_Color zone_color = {100, 255, 100, 100}; /* translucent green */
+        SDL_SetRenderDrawColor(renderer, zone_color.r, zone_color.g, zone_color.b, 100);
+        
+        int detection_zone_start = ws_x + ws_w/3;
+        int detection_zone_end = ws_x + (2*ws_w)/3;
+        int zone_width = detection_zone_end - detection_zone_start;
+        
+        /* Top and bottom borders of detection zone */
+        for(int i = 0; i < 3; i++){
+            SDL_Rect top_border = {detection_zone_start, ws_y + 20 + i, zone_width, 1};
+            SDL_Rect bottom_border = {detection_zone_start, ws_y + ws_h - 100 + i, zone_width, 1};
+            SDL_RenderFillRect(renderer, &top_border);
+            SDL_RenderFillRect(renderer, &bottom_border);
+        }
+        
+        /* Side borders */
+        for(int i = 0; i < 3; i++){
+            SDL_Rect left_border = {detection_zone_start + i, ws_y + 20, 1, ws_h - 120};
+            SDL_Rect right_border = {detection_zone_end - i, ws_y + 20, 1, ws_h - 120};
+            SDL_RenderFillRect(renderer, &left_border);
+            SDL_RenderFillRect(renderer, &right_border);
+        }
+        
+        /* "DETECTION ZONE" label */
+        draw_text(detection_zone_start + 10, ws_y + 30, 1, "CAMERA VIEW", zone_color);
+    }
     
     /* Draw user's car at bottom left (driver perspective) */
     draw_user_car();
@@ -715,6 +1047,59 @@ static void render_frame(void){
 
     SDL_RenderPresent(renderer);
 }
+
+#ifdef USE_OPENCV
+/* ===========================================================
+ *  OPENCV FRAME CAPTURE & PROCESSING
+ * =========================================================== */
+static void process_frame_with_opencv(void) {
+    uint32_t current_time = now_ms();
+    
+    /* Only process frames at specified intervals to avoid performance issues */
+    if (current_time - last_vision_process_ms < vision_process_interval_ms) {
+        return;
+    }
+    
+    last_vision_process_ms = current_time;
+    
+    /* Skip if vision system not initialized */
+    if (!speed_sign_vision_is_initialized()) {
+        return;
+    }
+    
+    /* Capture current windshield area as frame */
+    if (renderer == NULL) return;
+    
+    /* Create a surface to capture the windshield area */
+    SDL_Surface* windshield_surface = SDL_CreateRGBSurface(0, ws_w, ws_h, 32,
+        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    
+    if (windshield_surface == NULL) return;
+    
+    /* Read pixels from the windshield area */
+    SDL_Rect windshield_rect = {ws_x, ws_y, ws_w, ws_h};
+    if (SDL_RenderReadPixels(renderer, &windshield_rect, 
+                            windshield_surface->format->format,
+                            windshield_surface->pixels, 
+                            windshield_surface->pitch) == 0) {
+        
+        /* Process with OpenCV vision system */
+        bool detection_result = speed_sign_vision_process_frame(
+            (const uint8_t*)windshield_surface->pixels,
+            (uint16_t)ws_w,
+            (uint16_t)ws_h,
+            4  /* BGRA format */
+        );
+        
+        if (detection_result) {
+            /* Get the latest detection result */
+            speed_sign_vision_get_latest_detection(&detected_sign);
+        }
+    }
+    
+    SDL_FreeSurface(windshield_surface);
+}
+#endif /* USE_OPENCV */
 
 /* ===========================================================
  *  PUBLIC HAL (SDL)
@@ -729,6 +1114,17 @@ bool hal_sdl_init(void) {
     if (!renderer){ printf("SDL Renderer error: %s\n", SDL_GetError()); return false; }
     SDL_RenderSetLogicalSize(renderer, 1280, 720);
 
+#ifdef USE_OPENCV
+    /* Initialize speed sign vision system */
+    if (!speed_sign_vision_init()) {
+        printf("Warning: OpenCV speed sign vision system failed to initialize\n");
+    } else {
+        printf("OpenCV speed sign vision system initialized successfully\n");
+    }
+#else
+    printf("OpenCV integration disabled - using manual speed limit controls only\n");
+#endif
+
     /* schedule initial rain and object spawn */
     uint32_t t = now_ms();
     rain_state = RAIN_IDLE;
@@ -739,6 +1135,11 @@ bool hal_sdl_init(void) {
 }
 
 void hal_sdl_cleanup(void){
+#ifdef USE_OPENCV
+    /* Cleanup speed sign vision system */
+    speed_sign_vision_cleanup();
+#endif
+    
     if (renderer){ SDL_DestroyRenderer(renderer); renderer=NULL; }
     if (window){ SDL_DestroyWindow(window); window=NULL; }
 }
@@ -747,6 +1148,11 @@ void hal_sdl_step(void){
     if (!platform_sdl_pump_events()) return;
     handle_keyboard_input();
     render_frame();
+    
+#ifdef USE_OPENCV
+    /* Process frame with OpenCV for speed sign detection */
+    process_frame_with_opencv();
+#endif
 }
 
 /* ===========================================================
@@ -780,6 +1186,27 @@ bool hal_read_vehicle_speed_kph(uint16_t* out_kph, uint32_t* out_ts_ms){
 bool hal_poll_speed_limit_kph(uint16_t* out_limit_kph){
     static uint16_t last_reported = 0U;
     if(out_limit_kph==NULL) return false;
+    
+#ifdef USE_OPENCV
+    /* Check for OpenCV-detected speed limit first */
+    speed_sign_result_t vision_result;
+    if (speed_sign_vision_get_latest_detection(&vision_result)) {
+        /* Use detected speed limit if confidence is high enough */
+        if (vision_result.confidence >= 0.7f && vision_result.speed_limit_kph != last_reported) {
+            *out_limit_kph = vision_result.speed_limit_kph;
+            last_reported = vision_result.speed_limit_kph;
+            
+            /* Update simulator display limit to match detected limit */
+            sim_speed_limit = vision_result.speed_limit_kph;
+            
+            printf("OpenCV detected speed limit: %d km/h (confidence: %.2f)\n", 
+                   vision_result.speed_limit_kph, vision_result.confidence);
+            return true;
+        }
+    }
+#endif
+    
+    /* Check if speed limit changed (from road signs or manual controls) */
     if(sim_speed_limit != last_reported){
         *out_limit_kph = sim_speed_limit;
         last_reported = sim_speed_limit;

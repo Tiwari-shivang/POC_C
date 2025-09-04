@@ -1,0 +1,17 @@
+{
+  "seed": 12,
+  "duration_ms": 10000,
+  "tick_ms": 10,
+  "initial_state": { "speed_kph": 25, "outside_temp_c": 22 },
+  "stimuli": [
+    { "t_ms": 1000, "type": "rain_intensity", "value": 0.75 },
+    { "t_ms": 3000, "type": "rain_intensity", "value": 0.55 },
+    { "t_ms": 5000, "type": "rain_intensity", "value": 0.25 },
+    { "t_ms": 7000, "type": "rain_intensity", "value": 0.10 }
+  ],
+  "assertions": [
+    { "metric": "wipers.high_to_low_hysteresis_correct", "op": "==", "value": 1 },
+    { "metric": "wipers.int_to_off_hysteresis_correct", "op": "==", "value": 1 },
+    { "metric": "wipers.consecutive_sample_debounce", "op": "==", "value": 1 }
+  ]
+}

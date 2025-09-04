@@ -1,0 +1,20 @@
+{
+  "seed": 10,
+  "duration_ms": 8000,
+  "tick_ms": 10,
+  "initial_state": { "speed_kph": 30, "outside_temp_c": 20 },
+  "stimuli": [
+    { "t_ms": 1000, "type": "rain_intensity", "value": 0.10 },
+    { "t_ms": 2000, "type": "rain_intensity", "value": 0.25 },
+    { "t_ms": 3500, "type": "rain_intensity", "value": 0.45 },
+    { "t_ms": 5000, "type": "rain_intensity", "value": 0.75 },
+    { "t_ms": 6500, "type": "rain_intensity", "value": 0.45 }
+  ],
+  "assertions": [
+    { "metric": "wipers.off_to_int_latency_ms", "op": "<=", "value": 200 },
+    { "metric": "wipers.int_to_low_latency_ms", "op": "<=", "value": 200 },
+    { "metric": "wipers.low_to_high_latency_ms", "op": "<=", "value": 200 },
+    { "metric": "wipers.high_to_low_latency_ms", "op": "<=", "value": 200 },
+    { "metric": "wipers.park_time_ms", "op": "<=", "value": 500 }
+  ]
+}

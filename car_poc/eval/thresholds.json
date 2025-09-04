@@ -4,5 +4,32 @@
     "react_latency_ms_max": 60,
     "false_positive_max": 0,
     "false_negative_max": 0
+  },
+  "wipers": {
+    "off_to_int_latency_ms_max": 200,
+    "int_to_low_latency_ms_max": 200,
+    "low_to_high_latency_ms_max": 200,
+    "high_to_low_latency_ms_max": 200,
+    "park_time_ms_max": 500,
+    "stale_data_ignored_min": 1,
+    "mode_stability_during_stale_min": 1,
+    "hysteresis_correct_min": 1,
+    "consecutive_sample_debounce_min": 1
+  },
+  "speedgov": {
+    "overspeed_alarm_latency_ms_max": 200,
+    "limit_update_latency_ms_max": 100,
+    "alarm_clear_hysteresis_correct_min": 1,
+    "consecutive_sample_debounce_min": 1,
+    "stale_data_ignored_min": 1,
+    "alarm_hold_during_failure_min": 1,
+    "dtc_raised_on_failure_min": 1,
+    "dtc_cleared_on_recovery_min": 1,
+    "invalid_limit_ignored_min": 1,
+    "no_duplicate_requests_min": 1,
+    "opencv_detection_latency_ms_max": 1000,
+    "detection_confidence_min": 0.7,
+    "correct_speed_limit_detected_min": 1,
+    "vision_system_active_min": 1
   }
 }
