@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2">
+    <cppcheck version="2.18.0"/>
+    <errors>
+        <error id="missingInclude" severity="information" msg="Include file: &quot;eval_hooks.h&quot; not found." verbose="Include file: &quot;eval_hooks.h&quot; not found.">
+            <location file="car_poc/src/app_autobrake.c" line="6" column="0"/>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="car_poc/src/app_autobrake.c">
+            <location file="car_poc/src/app_autobrake.c" line="0" column="0"/>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="car_poc/src/app_speedgov.c">
+            <location file="car_poc/src/app_speedgov.c" line="0" column="0"/>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="car_poc/src/app_climate.c">
+            <location file="car_poc/src/app_climate.c" line="0" column="0"/>
+        </error>
+        <error id="normalCheckLevelMaxBranches" severity="information" msg="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." verbose="Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches." file0="car_poc/src/app_wipers.c">
+            <location file="car_poc/src/app_wipers.c" line="0" column="0"/>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;App_AutoBrake_Init&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;App_AutoBrake_Init&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="car_poc/src/app_autobrake.c" line="17" column="32"/>
+            <symbol>App_AutoBrake_Init</symbol>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;App_AutoBrake_Step&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;App_AutoBrake_Step&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="car_poc/src/app_autobrake.c" line="33" column="32"/>
+            <symbol>App_AutoBrake_Step</symbol>
+        </error>
+        <error id="staticFunction" severity="style" msg="The function &apos;App_AutoPark_Init&apos; should have static linkage since it is not used outside of its translation unit." verbose="The function &apos;App_AutoPark_Init&apos; should have static linkage since it is not used outside of its translation unit.">
+            <location file="car_poc/src/app_autopark.c" line="22" column="31"/>
+            <symbol>App_AutoPark_Init</symbol>
+        </error>
+        <error id="checkersReport" severity="information" msg="Active checkers: 110/966 (use --checkers-report=&lt;filename&gt; to see details)" verbose="Active checkers: 110/966 (use --checkers-report=&lt;filename&gt; to see details)"/>
+    </errors>
+</results>

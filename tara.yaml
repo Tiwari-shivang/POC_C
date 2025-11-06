@@ -1,0 +1,199 @@
+# tara.yaml - Mercedes POC TARA Configuration
+item: Mercedes_POC_AUTOSAR_Safety_Modules
+version: 1.0
+owners:
+  - name: "Mercedes POC Team"
+    email: "poc@mercedes.com"
+
+files_in_scope:
+  - path: "car_poc/src/app_autobrake.c"
+  - path: "car_poc/src/app_speedgov.c"
+  - path: "car_poc/src/app_wipers.c"
+  - path: "car_poc/src/app_autopark.c"
+  - path: "car_poc/src/app_climate.c"
+  - path: "car_poc/src/hal_sdl.c"
+  - path: "car_poc/src/hal_mock_pc.c"
+  - path: "car_poc/src/hal_interactive.c"
+
+# AUTOSAR/MISRA critical rules enforced
+static_ruleset:
+  name: "AUTOSAR_MISRA_C2012_CRITICAL"
+  description: "Critical AUTOSAR and MISRA C:2012 rules for automotive safety-critical systems"
+  rules:
+    - id: "A5-0-1"     # All variables shall be initialized before use
+    - id: "A18-5-2"    # Array bounds shall be checked
+    - id: "A0-1-1"     # No dangerous type conversions
+    - id: "A22-0-1"    # No undefined behavior patterns
+    - id: "A2-10-1"    # No unguarded macro usage
+    - id: "NW-NULL"    # Null pointer dereference checks
+    - id: "NW-BUFFER"  # Buffer overflow prevention
+    - id: "M16-5"      # Functions shall have a single point of exit
+    - id: "M17-7"      # Function return values shall be checked
+
+threats:
+  - id: "T1"
+    title: "Stale sensor data causes unintended braking"
+    feasibility: "high"
+    impact: "very_high"
+    risk: "very_high"
+    goals: ["G1", "G2"]
+    requirements: ["R1", "R2", "R3"]
+
+  - id: "T2"
+    title: "Sensor spoofing leads to false obstacle detection"
+    feasibility: "medium"
+    impact: "very_high"
+    risk: "high"
+    goals: ["G1", "G3"]
+    requirements: ["R1", "R4"]
+
+  - id: "T3"
+    title: "HAL interface tampering causes actuator malfunction"
+    feasibility: "low"
+    impact: "very_high"
+    risk: "high"
+    goals: ["G3", "G4"]
+    requirements: ["R5", "R6"]
+
+  - id: "T4"
+    title: "Speed limit tampering causes unsafe vehicle speed"
+    feasibility: "medium"
+    impact: "high"
+    risk: "high"
+    goals: ["G2", "G5"]
+    requirements: ["R7", "R8"]
+
+  - id: "T5"
+    title: "Climate control manipulation causes driver distraction"
+    feasibility: "high"
+    impact: "medium"
+    risk: "medium"
+    goals: ["G6"]
+    requirements: ["R9"]
+
+goals:
+  - id: "G1"
+    text: "Ensure data authenticity and freshness for all safety-critical sensor inputs"
+
+  - id: "G2"
+    text: "Maintain temporal validity of sensor data within defined thresholds"
+
+  - id: "G3"
+    text: "Prevent unauthorized modification of control signals"
+
+  - id: "G4"
+    text: "Ensure fail-safe defaults for all actuator commands"
+
+  - id: "G5"
+    text: "Enforce speed governance within legal and safety limits"
+
+  - id: "G6"
+    text: "Maintain driver comfort without compromising safety"
+
+requirements:
+  - id: "R1"
+    text: "Implement debouncing mechanism with configurable threshold for all sensor inputs"
+
+  - id: "R2"
+    text: "Reject sensor data older than 100ms (STALE_MS threshold)"
+
+  - id: "R3"
+    text: "Provide driver override capability for all automated functions"
+
+  - id: "R4"
+    text: "Validate sensor data plausibility against physical constraints"
+
+  - id: "R5"
+    text: "Apply defensive programming with runtime assertions for state consistency"
+
+  - id: "R6"
+    text: "Initialize all modules to safe default states"
+
+  - id: "R7"
+    text: "Implement hysteresis for speed limit transitions"
+
+  - id: "R8"
+    text: "Validate speed limit updates against reasonable bounds (0-200 kph)"
+
+  - id: "R9"
+    text: "Limit climate control adjustments to safe operational ranges"
+
+controls:
+  - id: "C_AUTOBRAKE_DEBOUNCE"
+    type: "code"
+    files: ["car_poc/src/app_autobrake.c"]
+    maps_requirements: ["R1", "R2", "R3", "R5", "R6"]
+    description: "Debouncing and stale data checks in autobrake control loop"
+
+  - id: "C_SPEEDGOV_HYSTERESIS"
+    type: "code"
+    files: ["car_poc/src/app_speedgov.c"]
+    maps_requirements: ["R1", "R2", "R7", "R8"]
+    description: "Speed governance with hysteresis and validation"
+
+  - id: "C_WIPERS_DEBOUNCE"
+    type: "code"
+    files: ["car_poc/src/app_wipers.c"]
+    maps_requirements: ["R1", "R2"]
+    description: "Wiper control with rain sensor debouncing"
+
+  - id: "C_AUTOPARK_SAFETY"
+    type: "code"
+    files: ["car_poc/src/app_autopark.c"]
+    maps_requirements: ["R1", "R2", "R4"]
+    description: "Parking assist with gap validation and speed checks"
+
+  - id: "C_CLIMATE_LIMITS"
+    type: "code"
+    files: ["car_poc/src/app_climate.c"]
+    maps_requirements: ["R9"]
+    description: "Climate control with operational range limits"
+
+  - id: "C_HAL_ASSERTIONS"
+    type: "code"
+    files: ["car_poc/src/hal_sdl.c", "car_poc/src/hal_mock_pc.c", "car_poc/src/hal_interactive.c"]
+    maps_requirements: ["R5", "R6"]
+    description: "HAL layer runtime assertions and safe defaults"
+
+tests:
+  - id: "UT_AUTOBRAKE_DEBOUNCE"
+    type: "unit"
+    description: "Unit tests for autobrake debouncing mechanism"
+    evidence_path: "car_poc/build/test_results/test_autobrake.xml"
+    covers_requirements: ["R1", "R3"]
+
+  - id: "UT_STALE_DATA_REJECT"
+    type: "unit"
+    description: "Unit tests for stale data rejection across all modules"
+    evidence_path: "car_poc/build/test_results/test_stale.xml"
+    covers_requirements: ["R2"]
+
+  - id: "UT_SPEEDGOV_HYSTERESIS"
+    type: "unit"
+    description: "Unit tests for speed governor hysteresis behavior"
+    evidence_path: "car_poc/build/test_results/test_speedgov.xml"
+    covers_requirements: ["R7", "R8"]
+
+  - id: "UT_SAFE_DEFAULTS"
+    type: "unit"
+    description: "Unit tests verifying safe initialization states"
+    evidence_path: "car_poc/build/test_results/test_init.xml"
+    covers_requirements: ["R6"]
+
+  - id: "INT_DRIVER_OVERRIDE"
+    type: "integration"
+    description: "Integration tests for driver override functionality"
+    evidence_path: "car_poc/build/test_results/test_override.xml"
+    covers_requirements: ["R3"]
+
+  - id: "SIL_SENSOR_VALIDATION"
+    type: "sil"
+    description: "Software-in-loop tests for sensor data validation"
+    evidence_path: "car_poc/build/test_results/test_sil_sensors.xml"
+    covers_requirements: ["R4"]
+
+  - id: "SYS_FULL_SCENARIO"
+    type: "system"
+    description: "Full system scenario tests with all modules"
+    evidence_path: "car_poc/build/test_results/test_scenarios.xml"
+    covers_requirements: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9"]

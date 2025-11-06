@@ -1,0 +1,44 @@
+section,subject,rule_or_id,status,details
+metadata,timestamp,generated,2025-10-17 11:20:55,
+metadata,tara_version,version,1.0,Mercedes_POC_AUTOSAR_Safety_Modules
+traceability,T1,goals_linked,PASS,2 goals linked
+traceability,T1,requirements_linked,PASS,3 requirements linked
+traceability,T2,goals_linked,PASS,2 goals linked
+traceability,T2,requirements_linked,PASS,2 requirements linked
+traceability,T3,goals_linked,PASS,2 goals linked
+traceability,T3,requirements_linked,PASS,2 requirements linked
+traceability,T4,goals_linked,PASS,2 goals linked
+traceability,T4,requirements_linked,PASS,2 requirements linked
+traceability,T5,goals_linked,PASS,1 goals linked
+traceability,T5,requirements_linked,PASS,1 requirements linked
+traceability,R1,control_exists,PASS,"Implemented by: C_AUTOBRAKE_DEBOUNCE, C_SPEEDGOV_HYSTERESIS, C_WIPERS_DEBOUNCE, C_AUTOPARK_SAFETY"
+traceability,R2,control_exists,PASS,"Implemented by: C_AUTOBRAKE_DEBOUNCE, C_SPEEDGOV_HYSTERESIS, C_WIPERS_DEBOUNCE, C_AUTOPARK_SAFETY"
+traceability,R3,control_exists,PASS,Implemented by: C_AUTOBRAKE_DEBOUNCE
+traceability,R4,control_exists,PASS,Implemented by: C_AUTOPARK_SAFETY
+traceability,R5,control_exists,PASS,"Implemented by: C_AUTOBRAKE_DEBOUNCE, C_HAL_ASSERTIONS"
+traceability,R6,control_exists,PASS,"Implemented by: C_AUTOBRAKE_DEBOUNCE, C_HAL_ASSERTIONS"
+traceability,R7,control_exists,PASS,Implemented by: C_SPEEDGOV_HYSTERESIS
+traceability,R8,control_exists,PASS,Implemented by: C_SPEEDGOV_HYSTERESIS
+traceability,R9,control_exists,PASS,Implemented by: C_CLIMATE_LIMITS
+traceability,T1,tests_cover_high_risk,PASS,"Covered by: INT_DRIVER_OVERRIDE, UT_STALE_DATA_REJECT, SYS_FULL_SCENARIO, UT_AUTOBRAKE_DEBOUNCE"
+traceability,T2,tests_cover_high_risk,PASS,"Covered by: SIL_SENSOR_VALIDATION, SYS_FULL_SCENARIO, UT_AUTOBRAKE_DEBOUNCE"
+traceability,T3,tests_cover_high_risk,PASS,"Covered by: UT_SAFE_DEFAULTS, SYS_FULL_SCENARIO"
+traceability,T4,tests_cover_high_risk,PASS,"Covered by: UT_SPEEDGOV_HYSTERESIS, SYS_FULL_SCENARIO"
+traceability,C_AUTOBRAKE_DEBOUNCE,files_in_scope,PASS,1 files referenced
+traceability,C_SPEEDGOV_HYSTERESIS,files_in_scope,PASS,1 files referenced
+traceability,C_WIPERS_DEBOUNCE,files_in_scope,PASS,1 files referenced
+traceability,C_AUTOPARK_SAFETY,files_in_scope,PASS,1 files referenced
+traceability,C_CLIMATE_LIMITS,files_in_scope,PASS,1 files referenced
+traceability,C_HAL_ASSERTIONS,files_in_scope,PASS,3 files referenced
+static,app_autobrake.c,cppcheck_summary,PASS,"Found: 2 information, 2 style"
+static,app_speedgov.c,cppcheck_summary,PASS,Found: 1 information
+static,app_wipers.c,cppcheck_summary,PASS,Found: 1 information
+static,app_autopark.c,cppcheck_summary,PASS,Found: 1 style
+static,app_climate.c,cppcheck_summary,PASS,Found: 1 information
+static,hal_sdl.c,cppcheck_summary,PASS,No issues found
+static,hal_mock_pc.c,cppcheck_summary,PASS,No issues found
+static,hal_interactive.c,cppcheck_summary,PASS,No issues found
+static,OVERALL,static_analysis,PASS,8 non-critical findings
+summary,traceability,total,29 PASS / 0 FAIL,Pass rate: 99.7%
+summary,static,total,9 PASS / 0 FAIL,Pass rate: 98.9%
+summary,OVERALL,verdict,PASS,All TARA checks passed successfully
